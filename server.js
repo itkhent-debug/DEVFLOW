@@ -19,9 +19,18 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
+const multer = require('multer');
+const AdmZip = require('adm-zip');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+const upload = multer({ dest: uploadDir });
 
 // ===== MONGODB CONNECTION =====
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -280,6 +289,93 @@ async function simulateDeploy(deployId, repoName, branch, framework) {
   }
 }
 
+async function processZipDeploy(deployId, zipPath, projectName) {
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  try {
+    await Deployment.updateOne({ id: deployId }, { status: 'building' });
+    
+    await pushLog(deployId, 'Starting deployment from uploaded file...', 'info');
+    await sleep(400);
+    await pushLog(deployId, 'Extracting archive...', 'info');
+    await sleep(600);
+
+    const destDir = path.join(__dirname, 'public', 'sites', deployId);
+    fs.mkdirSync(destDir, { recursive: true });
+
+    // Unzip files using adm-zip
+    const zip = new AdmZip(zipPath);
+    zip.extractAllTo(destDir, true);
+    
+    // Clean up temporary upload file
+    try {
+      fs.unlinkSync(zipPath);
+    } catch (err) {
+      console.warn('Failed to clean up temp zip file:', err);
+    }
+
+    await pushLog(deployId, '✓ Extraction complete', 'success');
+    await sleep(300);
+
+    // Read files to find index.html
+    await pushLog(deployId, 'Verifying deployment files...', 'info');
+    await sleep(400);
+
+    // Check if index.html exists
+    let hasIndex = false;
+    try {
+      hasIndex = fs.existsSync(path.join(destDir, 'index.html'));
+    } catch (e) {}
+
+    if (!hasIndex) {
+      // Check subdirectories in case the zip contained a folder wrapper
+      const items = fs.readdirSync(destDir);
+      if (items.length === 1 && fs.statSync(path.join(destDir, items[0])).isDirectory()) {
+        const subFolder = path.join(destDir, items[0]);
+        await pushLog(deployId, `Detected folder wrapper: ${items[0]}. Adjusting root paths...`, 'info');
+        
+        // Move files up one level
+        const subItems = fs.readdirSync(subFolder);
+        subItems.forEach(item => {
+          fs.renameSync(path.join(subFolder, item), path.join(destDir, item));
+        });
+        fs.rmdirSync(subFolder);
+        hasIndex = fs.existsSync(path.join(destDir, 'index.html'));
+      }
+    }
+
+    if (hasIndex) {
+      await pushLog(deployId, '✓ Found index.html', 'success');
+    } else {
+      await pushLog(deployId, '⚠️ Warning: index.html not found in root. Site might not load correctly.', 'error');
+    }
+
+    await pushLog(deployId, '─────────────────────────────────', 'divider');
+    await pushLog(deployId, 'Propagating to Edge Network...', 'info');
+    await sleep(500);
+    await pushLog(deployId, '✓ Edge propagation complete', 'success');
+
+    await pushLog(deployId, '─────────────────────────────────', 'divider');
+    await pushLog(deployId, 'Assigning deployment URL...', 'info');
+    await sleep(400);
+
+    const deployUrl = `http://localhost:${PORT}/sites/${deployId}/index.html`;
+    await pushLog(deployId, `✓ Deployment URL: ${deployUrl}`, 'success');
+
+    await pushLog(deployId, '─────────────────────────────────', 'divider');
+    const dbDeploy = await Deployment.findOne({ id: deployId });
+    const started = dbDeploy ? dbDeploy.startedAt : new Date();
+    const elapsed = ((Date.now() - new Date(started).getTime()) / 1000).toFixed(1);
+    await pushLog(deployId, `🚀 Deployment complete in ${elapsed}s`, 'done');
+    await pushLog(deployId, `Live at: ${deployUrl}`, 'url');
+
+    await finishDeployment(deployId, true);
+  } catch (err) {
+    await pushLog(deployId, `Deployment failed: ${err.message}`, 'error');
+    await finishDeployment(deployId, false);
+  }
+}
+
 // ===================================================
 //   ROUTES
 // ===================================================
@@ -289,6 +385,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.ht
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
 app.get('/deploy/:id', (req, res) => res.sendFile(path.join(__dirname, 'public', 'deploy.html')));
 app.get('/import', (req, res) => res.sendFile(path.join(__dirname, 'public', 'import.html')));
+app.get('/upload', (req, res) => res.sendFile(path.join(__dirname, 'public', 'upload.html')));
 
 // ===== AUTH STATUS =====
 app.get('/api/auth/me', async (req, res) => {
@@ -570,6 +667,95 @@ app.get('/api/deployments/:id/logs/stream', requireAuth, async (req, res) => {
     });
   } catch (err) {
     res.status(500).end();
+  }
+});
+
+// ===== UPLOAD & DEPLOY FROM ZIP =====
+app.post('/api/upload', requireAuth, upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const { projectName } = req.body;
+  const name = (projectName || req.file.originalname.replace(/\.[^.]+$/, '')).trim() || 'my-site';
+  const isZip = req.file.mimetype === 'application/zip' ||
+                req.file.mimetype === 'application/x-zip-compressed' ||
+                req.file.originalname.endsWith('.zip');
+
+  try {
+    const projectId = uuidv4();
+    const deployId = uuidv4();
+
+    const project = new Project({
+      id: projectId,
+      name,
+      repo: 'uploaded-file',
+      branch: 'main',
+      framework: 'Static HTML (Upload)',
+      userId: req.session.userId,
+      status: 'queued',
+      url: null,
+      deployments: [deployId],
+      lastDeployId: deployId,
+    });
+    await project.save();
+
+    const deployment = new Deployment({
+      id: deployId,
+      projectId,
+      status: 'queued',
+      logs: [],
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      duration: null,
+      commit: 'upload',
+      commitMsg: `Uploaded: ${req.file.originalname}`,
+      branch: 'upload',
+      url: null,
+    });
+    await deployment.save();
+
+    res.json({ project, deployId });
+
+    if (isZip) {
+      // Process as zip archive
+      setTimeout(() => processZipDeploy(deployId, req.file.path, name), 200);
+    } else {
+      // Single HTML file — write directly
+      setTimeout(async () => {
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        try {
+          await Deployment.updateOne({ id: deployId }, { status: 'building' });
+          await pushLog(deployId, `Uploading: ${req.file.originalname}`, 'info');
+          await sleep(400);
+
+          const destDir = path.join(__dirname, 'public', 'sites', deployId);
+          fs.mkdirSync(destDir, { recursive: true });
+          const destFile = path.join(destDir, 'index.html');
+          fs.copyFileSync(req.file.path, destFile);
+          fs.unlinkSync(req.file.path);
+
+          await pushLog(deployId, '✓ File deployed successfully', 'success');
+          await sleep(300);
+          await pushLog(deployId, 'Propagating to Edge Network...', 'info');
+          await sleep(600);
+          await pushLog(deployId, '✓ Edge propagation complete', 'success');
+
+          const deployUrl = `http://localhost:${PORT}/sites/${deployId}/index.html`;
+          await pushLog(deployId, `✓ Deployment URL: ${deployUrl}`, 'success');
+          await sleep(200);
+          await pushLog(deployId, `🚀 Deployment complete!`, 'done');
+          await pushLog(deployId, `Live at: ${deployUrl}`, 'url');
+          await finishDeployment(deployId, true);
+        } catch (err) {
+          await pushLog(deployId, `Error: ${err.message}`, 'error');
+          await finishDeployment(deployId, false);
+        }
+      }, 200);
+    }
+  } catch (err) {
+    // Clean up temp file if project creation failed
+    try { fs.unlinkSync(req.file.path); } catch (_) {}
+    console.error('Upload error:', err);
+    res.status(500).json({ error: 'Failed to start deployment' });
   }
 });
 

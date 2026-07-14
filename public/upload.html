@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload & Deploy — Deployify</title>
+  <meta name="description" content="Deploy your website by uploading a ZIP file or a single HTML file. No Git required." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { background: #060608; min-height: 100vh; }
+
+    .upload-page { max-width: 780px; margin: 0 auto; padding: 48px 24px; }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500;
+      margin-bottom: 36px; transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .page-header { margin-bottom: 36px; }
+    .page-header h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .page-header p { color: var(--text-muted); font-size: 15px; }
+
+    /* Drop zone */
+    .dropzone {
+      border: 2px dashed rgba(139,92,246,0.35);
+      border-radius: 18px;
+      padding: 64px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: rgba(139,92,246,0.04);
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: rgba(139,92,246,0.7);
+      background: rgba(139,92,246,0.09);
+      transform: scale(1.01);
+    }
+    .dropzone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .dz-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(59,130,246,0.2));
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 32px;
+    }
+    .dz-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .dz-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+    .dz-types {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    }
+    .dz-type-badge {
+      padding: 5px 14px; border-radius: 100px;
+      font-size: 12px; font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-muted); background: rgba(255,255,255,0.04);
+    }
+
+    /* File selected state */
+    .file-selected {
+      display: none; margin-top: 20px;
+      background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 12px; padding: 16px 20px;
+      align-items: center; gap: 14px;
+    }
+    .file-selected.active { display: flex; }
+    .file-icon { font-size: 28px; flex-shrink: 0; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-weight: 600; font-size: 14px; color: white; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-size { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .file-remove { font-size: 18px; cursor: pointer; color: var(--text-dim); flex-shrink: 0; transition: color 0.2s; }
+    .file-remove:hover { color: #ef4444; }
+
+    /* Config form */
+    .config-form {
+      margin-top: 32px;
+      background: #111119;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 28px;
+    }
+    .config-form h3 { font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .form-control {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9px; padding: 11px 14px; color: white; font-family: inherit; font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { outline: none; border-color: rgba(139,92,246,0.7); background: rgba(139,92,246,0.06); }
+    .form-hint { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
+
+    /* Site preview (shows for HTML files) */
+    .preview-section {
+      display: none; margin-top: 24px;
+      background: #0a0a12; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; overflow: hidden;
+    }
+    .preview-section.active { display: block; }
+    .preview-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .preview-bar-url {
+      flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px; padding: 4px 12px; font-size: 12px; color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .preview-label { font-size: 11px; color: var(--text-dim); padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    #preview-frame { width: 100%; height: 320px; border: none; background: white; }
+
+    /* Deploy button section */
+    .deploy-area { margin-top: 28px; }
+    .deploy-btn-wrap { position: relative; }
+
+    /* Progress bar */
+    .upload-progress {
+      display: none; margin-top: 16px;
+      background: rgba(255,255,255,0.06); border-radius: 100px; height: 6px; overflow: hidden;
+    }
+    .upload-progress.active { display: block; }
+    .progress-bar {
+      height: 100%; background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+      border-radius: 100px; width: 0%; transition: width 0.3s ease;
+    }
+    .upload-status { margin-top: 8px; font-size: 12px; color: var(--text-dim); text-align: center; }
+
+    /* Specs */
+    .specs-row {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 32px;
+    }
+    .spec-card {
+      background: #111119; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px;
+      padding: 18px; text-align: center;
+    }
+    .spec-icon { font-size: 24px; margin-bottom: 8px; }
+    .spec-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .spec-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+    @media(max-width:600px) {
+      .form-row { grid-template-columns: 1fr; }
+      .specs-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="upload-page">
+    <a href="/dashboard" class="back-link">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back to Dashboard
+    </a>
+
+    <div class="page-header">
+      <h1>Upload &amp; Deploy</h1>
+      <p>Drop a <strong>.zip</strong> of your entire website, or a single <strong>.html</strong> file. No Git required. Deploys in seconds.</p>
+    </div>
+
+    <!-- Drop Zone -->
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="file-input" accept=".zip,.html,.htm" />
+      <div class="dz-icon">📦</div>
+      <div class="dz-title">Drop your website here</div>
+      <div class="dz-sub">
+        Drag and drop a ZIP containing your website files,<br/>or a single HTML file to deploy instantly.
+      </div>
+      <div class="dz-types">
+        <span class="dz-type-badge">📁 .zip</span>
+        <span class="dz-type-badge">🌐 .html</span>
+        <span class="dz-type-badge">📄 .htm</span>
+      </div>
+    </div>
+
+    <!-- File Selected Display -->
+    <div class="file-selected" id="file-selected">
+      <div class="file-icon" id="file-icon">📦</div>
+      <div class="file-info">
+        <div class="file-name" id="file-name"></div>
+        <div class="file-size" id="file-size"></div>
+      </div>
+      <span class="file-remove" id="file-remove" title="Remove file">✕</span>
+    </div>
+
+    <!-- HTML Preview -->
+    <div class="preview-section" id="preview-section">
+      <div class="preview-bar">
+        <div class="preview-dot" style="background:#ff5f57"></div>
+        <div class="preview-dot" style="background:#ffbd2e"></div>
+        <div class="preview-dot" style="background:#28ca41"></div>
+        <div class="preview-bar-url">preview://local-file</div>
+      </div>
+      <div class="preview-label">👁 Live Preview (your file before deploying)</div>
+      <iframe id="preview-frame" title="Preview" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    </div>
+
+    <!-- Config Form -->
+    <div class="config-form" id="config-form" style="display:none;">
+      <h3>⚙️ Deployment Settings</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="project-name">Project Name</label>
+          <input type="text" class="form-control" id="project-name" placeholder="my-student-website" />
+          <div class="form-hint">Used for your deployment URL</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="project-desc">Description (optional)</label>
+          <input type="text" class="form-control" id="project-desc" placeholder="My school project" />
+        </div>
+      </div>
+
+      <div class="deploy-area">
+        <button class="btn btn-primary btn-block" id="deploy-btn" style="padding:16px;font-size:16px;justify-content:center;" disabled>
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Select a file to deploy
+        </button>
+        <div class="upload-progress" id="upload-progress">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="upload-status" id="upload-status"></div>
+      </div>
+    </div>
+
+    <!-- Feature specs -->
+    <div class="specs-row">
+      <div class="spec-card">
+        <div class="spec-icon">⚡</div>
+        <div class="spec-title">Instant Deploy</div>
+        <div class="spec-desc">Your site is live in under 10 seconds after upload</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-icon">👁</div>
+        <div class="spec-title">Live Preview</div>
+        <div class="spec-desc">See your HTML file rendered before you deploy it</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-icon">📦</div>
+        <div class="spec-title">Full ZIP Support</div>
+        <div class="spec-desc">Upload your full website with CSS, JS, and images as a ZIP</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+let selectedFile = null;
+
+async function init() {
+  const res = await fetch('/api/auth/me');
+  const data = await res.json();
+  if (!data.authenticated) return window.location.href = '/';
+}
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+const fileSelectedEl = document.getElementById('file-selected');
+const configForm = document.getElementById('config-form');
+const deployBtn = document.getElementById('deploy-btn');
+
+// Drag & drop events
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+document.getElementById('file-remove').addEventListener('click', () => {
+  selectedFile = null;
+  fileInput.value = '';
+  fileSelectedEl.classList.remove('active');
+  configForm.style.display = 'none';
+  document.getElementById('preview-section').classList.remove('active');
+  deployBtn.disabled = true;
+  deployBtn.innerHTML = `<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Select a file to deploy`;
+});
+
+function handleFile(file) {
+  const isZip = file.name.endsWith('.zip');
+  const isHtml = file.name.endsWith('.html') || file.name.endsWith('.htm');
+  if (!isZip && !isHtml) {
+    alert('Please select a .zip or .html file');
+    return;
+  }
+
+  selectedFile = file;
+
+  // Update file info display
+  document.getElementById('file-icon').textContent = isZip ? '📦' : '🌐';
+  document.getElementById('file-name').textContent = file.name;
+  document.getElementById('file-size').textContent = formatBytes(file.size);
+  fileSelectedEl.classList.add('active');
+
+  // Auto fill project name from filename
+  const baseName = file.name.replace(/\.(zip|html|htm)$/i, '').replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
+  document.getElementById('project-name').value = baseName;
+
+  // Show config form
+  configForm.style.display = 'block';
+
+  // Enable deploy button
+  deployBtn.disabled = false;
+  deployBtn.innerHTML = `<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Deploy ${file.name}`;
+
+  // Live preview for HTML files
+  if (isHtml) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const previewSection = document.getElementById('preview-section');
+      const frame = document.getElementById('preview-frame');
+      frame.srcdoc = e.target.result;
+      previewSection.classList.add('active');
+    };
+    reader.readAsText(file);
+  } else {
+    document.getElementById('preview-section').classList.remove('active');
+  }
+}
+
+deployBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+
+  const projectName = document.getElementById('project-name').value.trim() || 'my-site';
+
+  // UI: uploading state
+  deployBtn.disabled = true;
+  deployBtn.textContent = 'Uploading...';
+  const progressEl = document.getElementById('upload-progress');
+  const barEl = document.getElementById('progress-bar');
+  const statusEl = document.getElementById('upload-status');
+  progressEl.classList.add('active');
+  statusEl.textContent = 'Uploading file...';
+
+  // Animate progress bar
+  let pct = 0;
+  const ticker = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 12, 85);
+    barEl.style.width = pct + '%';
+  }, 200);
+
+  try {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('projectName', projectName);
+
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    clearInterval(ticker);
+    barEl.style.width = '100%';
+    statusEl.textContent = 'Upload complete! Redirecting to build logs...';
+
+    if (data.deployId) {
+      setTimeout(() => window.location.href = `/deploy/${data.deployId}`, 600);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch (err) {
+    clearInterval(ticker);
+    progressEl.classList.remove('active');
+    deployBtn.disabled = false;
+    deployBtn.textContent = 'Retry Deploy';
+    statusEl.textContent = 'Error: ' + err.message;
+    statusEl.style.color = '#ef4444';
+  }
+});
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+init();
+</script>
+</body>
+</html>
