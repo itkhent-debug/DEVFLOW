@@ -472,8 +472,18 @@ app.post('/api/auth/signup', async (req, res) => {
     // Check if email already registered
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
-      if (existing.authType === 'github') {
-        return res.status(409).json({ error: 'This email is already registered via GitHub. Please log in using the GitHub button.' });
+      if (existing.authType === 'github' && !existing.passwordHash) {
+        // Upgrade account to support email/password login as well
+        const passwordHash = await bcrypt.hash(password, 12);
+        await User.updateOne({ id: existing.id }, { passwordHash, authType: 'email' });
+        
+        req.session.userId = existing.id;
+        sendWelcomeEmail(email.toLowerCase(), existing.name || name).catch(() => {});
+        
+        return res.json({
+          ok: true,
+          user: { id: existing.id, login: existing.login, name: existing.name || name, email: existing.email, avatar: existing.avatar }
+        });
       }
       return res.status(409).json({ error: 'An account with this email already exists' });
     }
