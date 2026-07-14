@@ -1,0 +1,26 @@
+{
+  "name": "deployify",
+  "version": "1.0.0",
+  "description": "Deployify - Vercel Clone with GitHub integration and live deploy logs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itkhent-debug/DEVFLOW.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "express-session": "^1.17.3",
+    "mongoose": "^9.7.4",
+    "node-fetch": "^2.6.7",
+    "uuid": "^9.0.0"
+  }
+}

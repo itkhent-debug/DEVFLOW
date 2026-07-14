@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deployment — Deployify</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { background: #060608; }
+    .deploy-layout { max-width: 900px; margin: 40px auto; padding: 0 24px; }
+    .deploy-header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
+    .deploy-title h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+    .deploy-title p { font-size: 13px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    
+    .status-badge { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .status-building { background: rgba(249,115,22,0.15); color: #f97316; border: 1px solid rgba(249,115,22,0.3); animation: pulse 2s infinite; }
+    .status-ready { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    .status-error { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    
+    .top-actions { margin-left: auto; display: flex; gap: 10px; }
+    
+    /* Terminal UI */
+    .terminal-window { background: #09090f; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .terminal-header { background: #111119; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 8px; }
+    .t-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .t-title { margin-left: auto; font-size: 12px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+    
+    .terminal-logs { padding: 20px; min-height: 400px; max-height: 600px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; }
+    .log-line { display: flex; gap: 16px; margin-bottom: 4px; word-break: break-all; }
+    .log-time { color: var(--text-dim); flex-shrink: 0; user-select: none; }
+    .log-msg { color: #d4d4d8; }
+    
+    .log-type-info .log-msg { color: #d4d4d8; }
+    .log-type-success .log-msg { color: #22c55e; font-weight: 600; }
+    .log-type-error .log-msg { color: #ef4444; font-weight: 600; }
+    .log-type-cmd .log-msg { color: #a78bfa; font-weight: 600; }
+    .log-type-cmd .log-msg::before { content: "$ "; color: var(--text-dim); }
+    .log-type-divider .log-msg { color: var(--text-dim); }
+    .log-type-divider .log-time { opacity: 0; }
+    .log-type-url .log-msg { color: #60a5fa; text-decoration: underline; }
+    .log-type-done .log-msg { color: #a78bfa; font-weight: 700; font-size: 14px; }
+    
+    /* Result card */
+    .result-card { display: none; margin-top: 24px; background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(20,184,166,0.05)); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 24px; align-items: center; gap: 24px; animation: fadeSlideUp 0.6s ease forwards; }
+    .result-card.active { display: flex; }
+    .result-icon { width: 48px; height: 48px; background: rgba(34,197,94,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #22c55e; font-size: 24px; }
+    .result-info h3 { font-size: 16px; font-weight: 700; color: white; margin-bottom: 4px; }
+    .result-info a { color: #60a5fa; font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+    
+    @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.6 } }
+    @keyframes fadeSlideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="deploy-layout">
+    <a href="/dashboard" style="color:var(--text-muted);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:30px;">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Dashboard
+    </a>
+    
+    <div class="deploy-header">
+      <div class="deploy-title">
+        <h1>
+          Deploying Project
+          <span id="status-badge" class="status-badge status-building">Building</span>
+        </h1>
+        <p id="deploy-meta">Loading details...</p>
+      </div>
+      <div class="top-actions">
+        <button id="btn-cancel" class="btn btn-outline" style="padding:8px 16px;font-size:13px;">Cancel</button>
+      </div>
+    </div>
+    
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <span class="t-dot" style="background:#ff5f57"></span>
+        <span class="t-dot" style="background:#ffbd2e"></span>
+        <span class="t-dot" style="background:#28ca41"></span>
+        <span class="t-title">Build Logs</span>
+      </div>
+      <div class="terminal-logs" id="logs"></div>
+    </div>
+    
+    <div class="result-card" id="result-card">
+      <div class="result-icon">✓</div>
+      <div class="result-info">
+        <h3>Deployment Successful!</h3>
+        <a href="#" id="result-url" target="_blank" rel="noopener noreferrer">https://...</a>
+      </div>
+      <a href="#" id="btn-visit" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="margin-left:auto;">Visit Site</a>
+    </div>
+  </div>
+
+<script>
+async function init() {
+  const pathParts = window.location.pathname.split('/');
+  const deployId = pathParts[pathParts.length - 1];
+  
+  if (!deployId) return window.location.href = '/dashboard';
+  
+  // Fetch initial info
+  try {
+    const res = await fetch(`/api/deployments/${deployId}`);
+    if (!res.ok) throw new Error('Not found');
+    const deploy = await res.json();
+    document.getElementById('deploy-meta').textContent = `Commit: ${deploy.commit} on ${deploy.branch}`;
+    
+    if (deploy.status === 'ready') showSuccess(deploy.url);
+    else if (deploy.status === 'error') showError();
+  } catch (err) {
+    document.getElementById('deploy-meta').textContent = 'Error loading deployment details';
+  }
+  
+  // Connect to SSE for logs
+  const logsEl = document.getElementById('logs');
+  const evtSource = new EventSource(`/api/deployments/${deployId}/logs/stream`);
+  
+  evtSource.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    
+    if (data.log) {
+      const line = document.createElement('div');
+      line.className = `log-line log-type-${data.log.type}`;
+      const timeStr = new Date(data.log.time).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      line.innerHTML = `
+        <span class="log-time">${timeStr}</span>
+        <span class="log-msg">${escapeHtml(data.log.message)}</span>
+      `;
+      logsEl.appendChild(line);
+      logsEl.scrollTop = logsEl.scrollHeight;
+    }
+    
+    if (data.status) {
+      if (data.status === 'ready') showSuccess(data.url);
+      else if (data.status === 'error') showError();
+      evtSource.close();
+    }
+  };
+  
+  evtSource.onerror = function() {
+    evtSource.close();
+  };
+}
+
+function showSuccess(url) {
+  const badge = document.getElementById('status-badge');
+  badge.className = 'status-badge status-ready';
+  badge.textContent = 'Ready';
+  
+  if (url) {
+    const card = document.getElementById('result-card');
+    card.classList.add('active');
+    const a = document.getElementById('result-url');
+    a.href = url;
+    a.textContent = url;
+    document.getElementById('btn-visit').href = url;
+  }
+}
+
+function showError() {
+  const badge = document.getElementById('status-badge');
+  badge.className = 'status-badge status-error';
+  badge.textContent = 'Error';
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+init();
+</script>
+</body>
+</html>

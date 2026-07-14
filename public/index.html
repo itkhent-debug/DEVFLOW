@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deployify — Deploy Fast. Scale Instantly. Free Forever.</title>
+  <meta name="description" content="Deployify is the fastest way to deploy your web projects. Connect your repo, push code, and go live in seconds — with a free tier, edge network, and built-in databases." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo" id="logo-link">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <polygon points="14,2 26,24 2,24" fill="white"/>
+        </svg>
+        <span>Deployify</span>
+      </a>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#features" id="nav-features">Features</a></li>
+        <li><a href="#deploy" id="nav-deploy">Deploy</a></li>
+        <li><a href="#database" id="nav-database">Database</a></li>
+        <li><a href="#pricing" id="nav-pricing">Pricing</a></li>
+        <li><a href="#docs" id="nav-docs">Docs</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="/api/auth/github" class="btn btn-ghost" id="btn-login">Log In</a>
+        <a href="/api/auth/github" class="btn btn-primary" id="btn-signup">Sign Up Free</a>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="#features" id="mob-features">Features</a>
+    <a href="#deploy" id="mob-deploy">Deploy</a>
+    <a href="#database" id="mob-database">Database</a>
+    <a href="#pricing" id="mob-pricing">Pricing</a>
+    <a href="#docs" id="mob-docs">Docs</a>
+    <a href="#" class="btn btn-primary" id="mob-signup" style="margin-top:12px;text-align:center;">Sign Up Free</a>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-glow hero-glow-1"></div>
+    <div class="hero-glow hero-glow-2"></div>
+    <div class="hero-glow hero-glow-3"></div>
+    <div class="hero-container">
+      <div class="hero-badge" id="hero-badge">
+        <span class="badge-dot"></span>
+        New: Postgres Database now in Free Tier
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <h1 class="hero-title" id="hero-title">
+        Deploy Your <br/>
+        <span class="gradient-text">Frontend Fast.</span><br/>
+        Go Live in Seconds.
+      </h1>
+      <p class="hero-sub" id="hero-sub">
+        Connect your GitHub, GitLab, or Bitbucket repo.<br/>
+        Push code — your site deploys automatically.<br/>
+        <strong>Free tier. No credit card. No limits on ideas.</strong>
+      </p>
+      <div class="hero-cta" id="hero-cta">
+        <a href="/api/auth/github" class="btn btn-primary btn-xl" id="btn-start-deploy">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Start Deploying Free
+        </a>
+        <a href="#" class="btn btn-outline btn-xl" id="btn-demo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><polygon points="10,8 16,12 10,16" fill="currentColor"/></svg>
+          Watch Demo
+        </a>
+      </div>
+      <!-- Terminal -->
+      <div class="terminal" id="terminal">
+        <div class="terminal-header">
+          <span class="t-dot t-red"></span>
+          <span class="t-dot t-yellow"></span>
+          <span class="t-dot t-green"></span>
+          <span class="t-title">deployify — deploy</span>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <div class="t-line"><span class="t-prompt">$</span> <span class="t-cmd">deployify deploy</span></div>
+          <div class="t-line t-fade" style="--d:0.3s"><span class="t-info">▶</span> Detecting framework... <span class="t-ok">Next.js</span></div>
+          <div class="t-line t-fade" style="--d:0.6s"><span class="t-info">▶</span> Installing dependencies... <span class="t-ok">done</span></div>
+          <div class="t-line t-fade" style="--d:0.9s"><span class="t-info">▶</span> Building project... <span class="t-ok">✓</span></div>
+          <div class="t-line t-fade" style="--d:1.2s"><span class="t-info">▶</span> Uploading to edge... <span class="t-ok">done</span></div>
+          <div class="t-line t-fade" style="--d:1.5s"><span class="t-info">▶</span> Assigning domain...</div>
+          <div class="t-line t-fade" style="--d:1.8s"><span class="t-success">✓</span> Deployed! <span class="t-url">https://my-app.deployify.app</span></div>
+          <div class="t-line t-fade" style="--d:2.1s"><span class="t-muted">Ready in <strong>2.4s</strong></span> <span class="t-cursor">▊</span></div>
+        </div>
+      </div>
+      <div class="hero-stats" id="hero-stats">
+        <div class="stat-item"><span class="stat-num">2.4s</span><span class="stat-label">Avg deploy time</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><span class="stat-num">99.99%</span><span class="stat-label">Uptime SLA</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><span class="stat-num">100+</span><span class="stat-label">Edge regions</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><span class="stat-num">Free</span><span class="stat-label">No CC required</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUSTED BY -->
+  <section class="trusted" id="trusted">
+    <p class="trusted-label">Trusted by engineers at</p>
+    <div class="logo-strip" id="logo-strip">
+      <div class="logo-track">
+        <span class="logo-pill">Stripe</span><span class="logo-pill">Shopify</span><span class="logo-pill">Airbnb</span><span class="logo-pill">Twilio</span><span class="logo-pill">Discord</span><span class="logo-pill">Notion</span><span class="logo-pill">Linear</span><span class="logo-pill">Figma</span>
+        <span class="logo-pill">Stripe</span><span class="logo-pill">Shopify</span><span class="logo-pill">Airbnb</span><span class="logo-pill">Twilio</span><span class="logo-pill">Discord</span><span class="logo-pill">Notion</span><span class="logo-pill">Linear</span><span class="logo-pill">Figma</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="section-container">
+      <div class="section-badge">Features</div>
+      <h2 class="section-title">Everything you need to<br/><span class="gradient-text">ship faster</span></h2>
+      <p class="section-sub">From git push to production in seconds. Built for modern web developers who value speed, reliability, and DX.</p>
+      <div class="features-grid" id="features-grid">
+        <div class="feat-card feat-large" id="feat-ci">
+          <div class="feat-icon"><svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" fill="rgba(139,92,246,0.2)"/></svg></div>
+          <h3>Git-Powered CI/CD</h3>
+          <p>Push to any branch and Deployify automatically builds, tests, and deploys your project. Preview URLs for every PR included.</p>
+          <div class="feat-visual">
+            <div class="branch-vis">
+              <div class="branch-line main"><span class="branch-dot"></span><span class="branch-name">main</span><span class="branch-status deployed">● Deployed</span></div>
+              <div class="branch-line feat"><span class="branch-dot"></span><span class="branch-name">feat/new-ui</span><span class="branch-status preview">● Preview</span></div>
+              <div class="branch-line pr"><span class="branch-dot"></span><span class="branch-name">fix/bug-123</span><span class="branch-status building">● Building...</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="feat-card" id="feat-edge">
+          <div class="feat-icon feat-icon-blue"><svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="rgba(59,130,246,0.3)" stroke="currentColor" stroke-width="1.5"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <h3>Global Edge Network</h3>
+          <p>Your app served from 100+ regions worldwide. Sub-50ms latency for every user, everywhere on the planet.</p>
+          <div class="globe-mini" id="globe-mini">
+            <div class="globe-ring"></div>
+            <div class="globe-dot" style="top:30%;left:20%"></div>
+            <div class="globe-dot" style="top:45%;left:50%"></div>
+            <div class="globe-dot" style="top:60%;left:75%"></div>
+            <div class="globe-dot" style="top:25%;left:65%"></div>
+            <div class="globe-dot" style="top:70%;left:35%"></div>
+          </div>
+        </div>
+        <div class="feat-card" id="feat-https">
+          <div class="feat-icon feat-icon-green"><svg width="28" height="28" fill="none" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="rgba(34,197,94,0.2)"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <h3>Automatic HTTPS</h3>
+          <p>Every deployment gets a free SSL certificate, auto-renewed. Custom domains in one click. Zero configuration needed.</p>
+        </div>
+        <div class="feat-card" id="feat-preview">
+          <div class="feat-icon feat-icon-purple"><svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3" fill="rgba(139,92,246,0.3)" stroke="currentColor" stroke-width="1.5"/></svg></div>
+          <h3>Instant Preview URLs</h3>
+          <p>Every pull request gets its own shareable preview URL. Share with teammates or clients before merging.</p>
+        </div>
+        <div class="feat-card" id="feat-rollback">
+          <div class="feat-icon feat-icon-orange"><svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>One-Click Rollback</h3>
+          <p>Something went wrong? Instantly revert to any previous deployment with a single click. No downtime, no stress.</p>
+        </div>
+        <div class="feat-card feat-large" id="feat-analytics">
+          <div class="feat-icon feat-icon-teal"><svg width="28" height="28" fill="none" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Real-Time Analytics</h3>
+          <p>Built-in analytics with pageviews, unique visitors, performance metrics, and Core Web Vitals — no third-party scripts needed.</p>
+          <div class="analytics-chart" id="analytics-chart">
+            <div class="chart-bars">
+              <div class="bar" style="--h:40%"></div>
+              <div class="bar" style="--h:70%"></div>
+              <div class="bar" style="--h:55%"></div>
+              <div class="bar" style="--h:90%"></div>
+              <div class="bar" style="--h:65%"></div>
+              <div class="bar" style="--h:80%"></div>
+              <div class="bar active" style="--h:95%"></div>
+            </div>
+            <div class="chart-labels">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEPLOY STEPS -->
+  <section class="deploy-section" id="deploy">
+    <div class="section-container">
+      <div class="section-badge">Deploy</div>
+      <h2 class="section-title">From push to <span class="gradient-text">production</span><br/>in under 10 seconds</h2>
+      <p class="section-sub">Connect your repository once. Every git push triggers an automated build and deployment.</p>
+      <div class="deploy-steps" id="deploy-steps">
+        <div class="step" id="step-1">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h3>Import Repository</h3>
+            <p>Connect GitHub, GitLab, or Bitbucket. Select the repo you want to deploy.</p>
+          </div>
+          <div class="step-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77A5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step" id="step-2">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h3>Configure Settings</h3>
+            <p>Auto-detected framework settings. Add env variables, custom domains, or leave defaults.</p>
+          </div>
+          <div class="step-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step" id="step-3">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h3>Deploy &amp; Share</h3>
+            <p>Deployify builds and deploys in seconds. Get a live URL instantly to share with the world.</p>
+          </div>
+          <div class="step-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </div>
+      <div class="frameworks" id="frameworks">
+        <p class="frameworks-label">Works with every major framework</p>
+        <div class="framework-badges">
+          <span class="fw-badge" id="fw-next">⬛ Next.js</span>
+          <span class="fw-badge" id="fw-react">⚛️ React</span>
+          <span class="fw-badge" id="fw-vue">💚 Vue</span>
+          <span class="fw-badge" id="fw-svelte">🔥 Svelte</span>
+          <span class="fw-badge" id="fw-nuxt">💚 Nuxt</span>
+          <span class="fw-badge" id="fw-remix">💿 Remix</span>
+          <span class="fw-badge" id="fw-astro">🚀 Astro</span>
+          <span class="fw-badge" id="fw-vite">⚡ Vite</span>
+          <span class="fw-badge" id="fw-gatsby">💜 Gatsby</span>
+          <span class="fw-badge" id="fw-angular">🅰️ Angular</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATABASE -->
+  <section class="db-section" id="database">
+    <div class="section-container">
+      <div class="section-badge db-badge">Database</div>
+      <h2 class="section-title">Built-in databases.<br/><span class="gradient-text">Zero config.</span></h2>
+      <p class="section-sub">Provision a full Postgres, Redis, or Blob storage database in seconds. Connected to your deployments automatically.</p>
+      <div class="db-grid" id="db-grid">
+        <div class="db-card" id="db-postgres">
+          <div class="db-card-top">
+            <div class="db-icon db-icon-blue">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="rgba(59,130,246,0.15)"/><path d="M16 7c-4.97 0-9 2.24-9 5v8c0 2.76 4.03 5 9 5s9-2.24 9-5V12c0-2.76-4.03-5-9-5z" stroke="#3b82f6" stroke-width="1.5"/><ellipse cx="16" cy="12" rx="9" ry="5" stroke="#3b82f6" stroke-width="1.5"/></svg>
+            </div>
+            <span class="db-tag">Most Popular</span>
+          </div>
+          <h3>Postgres</h3>
+          <p>Fully managed PostgreSQL with automatic backups, connection pooling, and point-in-time recovery.</p>
+          <ul class="db-features">
+            <li>✓ 512MB free storage</li>
+            <li>✓ Automatic daily backups</li>
+            <li>✓ Connection pooling</li>
+            <li>✓ Prisma &amp; Drizzle ORM ready</li>
+          </ul>
+          <a href="#" class="db-link" id="db-link-postgres">Add Postgres database →</a>
+        </div>
+        <div class="db-card" id="db-redis">
+          <div class="db-card-top">
+            <div class="db-icon db-icon-red">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="rgba(239,68,68,0.15)"/><path d="M8 16h16M8 12h16M8 20h10" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+          <h3>Redis KV</h3>
+          <p>Durable key-value store powered by Redis. Perfect for sessions, caching, and rate limiting at the edge.</p>
+          <ul class="db-features">
+            <li>✓ 30MB free storage</li>
+            <li>✓ Edge-compatible SDK</li>
+            <li>✓ Persistence + eviction policies</li>
+            <li>✓ REST API included</li>
+          </ul>
+          <a href="#" class="db-link" id="db-link-redis">Add Redis KV →</a>
+        </div>
+        <div class="db-card" id="db-blob">
+          <div class="db-card-top">
+            <div class="db-icon db-icon-purple">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="rgba(139,92,246,0.15)"/><path d="M12 8h8l4 4v12a2 2 0 01-2 2H10a2 2 0 01-2-2V10a2 2 0 012-2z" stroke="#8b5cf6" stroke-width="1.5"/><polyline points="16,8 16,12 20,12" stroke="#8b5cf6" stroke-width="1.5"/></svg>
+            </div>
+          </div>
+          <h3>Blob Storage</h3>
+          <p>Upload and serve files, images, and assets from a globally distributed CDN. S3-compatible API.</p>
+          <ul class="db-features">
+            <li>✓ 512MB free storage</li>
+            <li>✓ CDN-backed delivery</li>
+            <li>✓ S3-compatible API</li>
+            <li>✓ Public &amp; private buckets</li>
+          </ul>
+          <a href="#" class="db-link" id="db-link-blob">Add Blob Storage →</a>
+        </div>
+      </div>
+      <!-- Code Snippet -->
+      <div class="code-snippet" id="code-snippet">
+        <div class="snippet-tabs">
+          <button class="snippet-tab active" id="tab-postgres" onclick="switchTab('postgres')">Postgres</button>
+          <button class="snippet-tab" id="tab-redis" onclick="switchTab('redis')">Redis KV</button>
+          <button class="snippet-tab" id="tab-blob" onclick="switchTab('blob')">Blob</button>
+        </div>
+        <div class="snippet-body">
+          <pre id="snippet-postgres" class="snippet-code active"><code><span class="kw">import</span> { sql } <span class="kw">from</span> <span class="str">'@deployify/postgres'</span>;
+
+<span class="kw">export default async function</span> <span class="fn">handler</span>(req, res) {
+  <span class="kw">const</span> { rows } = <span class="kw">await</span> sql<span class="str">`
+    SELECT * FROM users
+    WHERE active = true
+    LIMIT 10
+  `</span>;
+  res.<span class="fn">json</span>({ users: rows });
+}</code></pre>
+          <pre id="snippet-redis" class="snippet-code"><code><span class="kw">import</span> { kv } <span class="kw">from</span> <span class="str">'@deployify/kv'</span>;
+
+<span class="kw">export default async function</span> <span class="fn">handler</span>(req, res) {
+  <span class="kw">const</span> cached = <span class="kw">await</span> kv.<span class="fn">get</span>(<span class="str">'my-data'</span>);
+  <span class="kw">if</span> (cached) <span class="kw">return</span> res.<span class="fn">json</span>(cached);
+
+  <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetchData</span>();
+  <span class="kw">await</span> kv.<span class="fn">set</span>(<span class="str">'my-data'</span>, data, { ex: <span class="num">3600</span> });
+  res.<span class="fn">json</span>(data);
+}</code></pre>
+          <pre id="snippet-blob" class="snippet-code"><code><span class="kw">import</span> { put } <span class="kw">from</span> <span class="str">'@deployify/blob'</span>;
+
+<span class="kw">export default async function</span> <span class="fn">handler</span>(req, res) {
+  <span class="kw">const</span> file = req.body.file;
+  <span class="kw">const</span> { url } = <span class="kw">await</span> <span class="fn">put</span>(<span class="str">'avatar.png'</span>, file, {
+    access: <span class="str">'public'</span>,
+  });
+  res.<span class="fn">json</span>({ url });
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing-section" id="pricing">
+    <div class="section-container">
+      <div class="section-badge">Pricing</div>
+      <h2 class="section-title">Start free.<br/><span class="gradient-text">Scale as you grow.</span></h2>
+      <p class="section-sub">No hidden fees. No credit card required. Upgrade when you're ready.</p>
+      <div class="pricing-toggle" id="pricing-toggle">
+        <span class="toggle-label" id="lbl-monthly">Monthly</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="billing-toggle" onchange="toggleBilling()" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label" id="lbl-annual">Annual <span class="save-badge">Save 20%</span></span>
+      </div>
+      <div class="pricing-cards" id="pricing-cards">
+        <div class="price-card" id="plan-hobby">
+          <div class="plan-name">Hobby</div>
+          <div class="plan-price">
+            <span class="price-amount" data-monthly="0" data-annual="0">$0</span>
+            <span class="price-period">/month</span>
+          </div>
+          <p class="plan-desc">Perfect for personal projects and side hustles.</p>
+          <a href="#" class="btn btn-outline btn-block" id="btn-hobby">Get Started Free</a>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> 100GB bandwidth/month</li>
+            <li><span class="check">✓</span> Unlimited deployments</li>
+            <li><span class="check">✓</span> Automatic HTTPS</li>
+            <li><span class="check">✓</span> Edge CDN (100+ regions)</li>
+            <li><span class="check">✓</span> Preview deployments</li>
+            <li><span class="check">✓</span> Postgres 512MB</li>
+            <li><span class="check">✓</span> Redis KV 30MB</li>
+            <li><span class="check">✓</span> Blob Storage 512MB</li>
+            <li><span class="muted">✗</span> Custom domains (1 max)</li>
+            <li><span class="muted">✗</span> Team collaboration</li>
+          </ul>
+        </div>
+        <div class="price-card price-card-popular" id="plan-pro">
+          <div class="popular-tag">Most Popular</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">
+            <span class="price-amount" data-monthly="20" data-annual="16">$20</span>
+            <span class="price-period">/month</span>
+          </div>
+          <p class="plan-desc">For professional developers and growing teams.</p>
+          <a href="#" class="btn btn-primary btn-block" id="btn-pro">Start Pro Trial</a>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> 1TB bandwidth/month</li>
+            <li><span class="check">✓</span> Unlimited deployments</li>
+            <li><span class="check">✓</span> Automatic HTTPS</li>
+            <li><span class="check">✓</span> Edge CDN (100+ regions)</li>
+            <li><span class="check">✓</span> Preview deployments</li>
+            <li><span class="check">✓</span> Postgres 10GB</li>
+            <li><span class="check">✓</span> Redis KV 256MB</li>
+            <li><span class="check">✓</span> Blob Storage 50GB</li>
+            <li><span class="check">✓</span> Unlimited custom domains</li>
+            <li><span class="check">✓</span> Team collaboration (up to 10)</li>
+          </ul>
+        </div>
+        <div class="price-card" id="plan-enterprise">
+          <div class="plan-name">Enterprise</div>
+          <div class="plan-price">
+            <span class="price-amount price-custom">Custom</span>
+          </div>
+          <p class="plan-desc">For large-scale applications with dedicated support.</p>
+          <a href="#" class="btn btn-outline btn-block" id="btn-enterprise">Contact Sales</a>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> Unlimited bandwidth</li>
+            <li><span class="check">✓</span> Priority builds</li>
+            <li><span class="check">✓</span> SOC 2 &amp; HIPAA compliance</li>
+            <li><span class="check">✓</span> SLA 99.99% uptime</li>
+            <li><span class="check">✓</span> Custom Postgres DBs</li>
+            <li><span class="check">✓</span> Dedicated Redis cluster</li>
+            <li><span class="check">✓</span> Unlimited Blob Storage</li>
+            <li><span class="check">✓</span> Unlimited custom domains</li>
+            <li><span class="check">✓</span> Unlimited team members</li>
+            <li><span class="check">✓</span> 24/7 dedicated support</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials" id="testimonials">
+    <div class="section-container">
+      <div class="section-badge">Loved by devs</div>
+      <h2 class="section-title">What developers<br/><span class="gradient-text">are saying</span></h2>
+      <div class="testi-grid" id="testi-grid">
+        <div class="testi-card" id="testi-1">
+          <div class="stars">★★★★★</div>
+          <p>"Deployify cut our deployment time from 10 minutes to under 10 seconds. It just works."</p>
+          <div class="testi-author"><div class="author-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">AK</div><div><strong>Alex Kim</strong><br/><small>Senior Engineer @ Stripe</small></div></div>
+        </div>
+        <div class="testi-card" id="testi-2">
+          <div class="stars">★★★★★</div>
+          <p>"The database integrations are incredible. Postgres, Redis and Blob all connected in one dashboard."</p>
+          <div class="testi-author"><div class="author-avatar" style="background:linear-gradient(135deg,#06b6d4,#3b82f6)">SM</div><div><strong>Sara Morin</strong><br/><small>Fullstack Dev @ Shopify</small></div></div>
+        </div>
+        <div class="testi-card" id="testi-3">
+          <div class="stars">★★★★★</div>
+          <p>"Preview deployments per PR changed our entire review workflow. Every team should use this."</p>
+          <div class="testi-author"><div class="author-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">JL</div><div><strong>James Lee</strong><br/><small>Lead Dev @ Notion</small></div></div>
+        </div>
+        <div class="testi-card" id="testi-4">
+          <div class="stars">★★★★★</div>
+          <p>"Free tier with Postgres? I thought it was a typo. It's not. This is the best deal in dev tools."</p>
+          <div class="testi-author"><div class="author-avatar" style="background:linear-gradient(135deg,#10b981,#06b6d4)">PR</div><div><strong>Priya Reddy</strong><br/><small>Indie Hacker</small></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="cta">
+    <div class="cta-glow"></div>
+    <div class="section-container">
+      <h2 class="cta-title">Ship your first project<br/><span class="gradient-text">today. For free.</span></h2>
+      <p class="cta-sub">Join thousands of developers deploying with Deployify. No credit card, no time limits, no BS.</p>
+      <div class="cta-actions">
+        <a href="#" class="btn btn-primary btn-xl" id="btn-cta-deploy">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Deploy Now — It's Free
+        </a>
+        <a href="#" class="btn btn-ghost btn-xl" id="btn-cta-docs">Read the Docs →</a>
+      </div>
+      <p class="cta-note">No credit card required • Free forever plan available • Deploy in 60 seconds</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <a href="#" class="nav-logo footer-logo" id="footer-logo">
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none"><polygon points="14,2 26,24 2,24" fill="white"/></svg>
+          <span>Deployify</span>
+        </a>
+        <p>The fastest way to deploy and scale modern web applications.</p>
+        <div class="footer-socials">
+          <a href="#" id="social-twitter" aria-label="Twitter"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a href="#" id="social-github" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a href="#" id="social-discord" aria-label="Discord"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z" stroke="currentColor" stroke-width="1.2"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col"><h4>Product</h4><a href="#" id="f-features">Features</a><a href="#" id="f-pricing">Pricing</a><a href="#" id="f-changelog">Changelog</a><a href="#" id="f-roadmap">Roadmap</a><a href="#" id="f-status">Status</a></div>
+        <div class="footer-col"><h4>Databases</h4><a href="#" id="f-postgres">Postgres</a><a href="#" id="f-redis">Redis KV</a><a href="#" id="f-blob">Blob Storage</a><a href="#" id="f-edge">Edge Config</a></div>
+        <div class="footer-col"><h4>Developers</h4><a href="#" id="f-docs">Documentation</a><a href="#" id="f-cli">CLI Reference</a><a href="#" id="f-api">REST API</a><a href="#" id="f-guides">Guides</a><a href="#" id="f-examples">Examples</a></div>
+        <div class="footer-col"><h4>Company</h4><a href="#" id="f-about">About</a><a href="#" id="f-blog">Blog</a><a href="#" id="f-careers">Careers</a><a href="#" id="f-privacy">Privacy</a><a href="#" id="f-terms">Terms</a></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Deployify, Inc. All rights reserved.</p>
+      <p>Made with ❤️ for developers everywhere</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

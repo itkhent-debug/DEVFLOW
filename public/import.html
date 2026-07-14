@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Import Project — Deployify</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { background: #060608; }
+    .import-container { max-width: 800px; margin: 60px auto; padding: 0 24px; }
+    .import-header { text-align: center; margin-bottom: 40px; }
+    .import-header h1 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+    .import-header p { color: var(--text-muted); }
+
+    .import-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; align-items: start; }
+    
+    .repo-list { background: #111119; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+    .repo-search { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; gap: 10px; }
+    .repo-search input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; color: white; font-family: inherit; }
+    .repo-search input:focus { outline: none; border-color: var(--purple-light); }
+    
+    .repo-item { padding: 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
+    .repo-item:last-child { border-bottom: none; }
+    .repo-item:hover { background: rgba(255,255,255,0.03); }
+    
+    .repo-info { display: flex; align-items: center; gap: 12px; }
+    .repo-icon { color: var(--text-dim); }
+    .repo-name { font-weight: 600; font-size: 14px; }
+    .repo-meta { font-size: 12px; color: var(--text-dim); display: flex; gap: 10px; margin-top: 4px; }
+    
+    .config-panel { background: #111119; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px; position: sticky; top: 24px; display: none; }
+    .config-panel.active { display: block; }
+    .config-panel h3 { font-size: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+    .form-control { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; color: white; font-family: inherit; }
+    .form-control:focus { outline: none; border-color: var(--purple-light); }
+    
+    select.form-control { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+    
+    @media (max-width: 768px) { .import-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="import-container">
+    <div class="import-header">
+      <a href="/dashboard" style="color:var(--text-muted);text-decoration:none;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:20px;">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Dashboard
+      </a>
+      <h1>Import Git Repository</h1>
+      <p>Select a repository from your connected GitHub account.</p>
+    </div>
+
+    <div class="import-grid">
+      <div class="repo-list">
+        <div class="repo-search">
+          <input type="text" id="searchInput" placeholder="Search repositories..." oninput="filterRepos()" />
+        </div>
+        <div id="repos-container" style="min-height:200px;">
+          <div style="padding:40px;text-align:center;color:var(--text-dim);">Loading repositories...</div>
+        </div>
+      </div>
+
+      <div class="config-panel" id="config-panel">
+        <h3>Configure Project</h3>
+        <form id="import-form" onsubmit="handleImport(event)">
+          <div class="form-group">
+            <label class="form-label">Repository</label>
+            <input type="text" id="repo-name-display" class="form-control" readonly style="opacity:0.7;" />
+            <input type="hidden" id="repo-fullname" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Framework Preset</label>
+            <select id="framework-select" class="form-control">
+              <option value="Next.js">Next.js</option>
+              <option value="React">React (Create React App)</option>
+              <option value="Vue">Vue.js</option>
+              <option value="Svelte">Svelte</option>
+              <option value="Static HTML" selected>Static HTML / Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Branch</label>
+            <select id="branch-select" class="form-control">
+              <option value="main">main</option>
+              <option value="master">master</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-deploy" style="padding:14px;font-size:15px;margin-top:10px;">
+            Deploy Now
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+let allRepos = [];
+
+async function init() {
+  const res = await fetch('/api/auth/me');
+  const data = await res.json();
+  if (!data.authenticated) return window.location.href = '/';
+
+  fetchRepos();
+}
+
+async function fetchRepos() {
+  const container = document.getElementById('repos-container');
+  try {
+    const res = await fetch('/api/github/repos');
+    allRepos = await res.json();
+    renderRepos(allRepos);
+  } catch (err) {
+    container.innerHTML = '<div style="padding:20px;color:#ef4444;text-align:center;">Failed to load repositories.</div>';
+  }
+}
+
+function renderRepos(repos) {
+  const container = document.getElementById('repos-container');
+  if (repos.length === 0) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim);">No repositories found.</div>';
+    return;
+  }
+  
+  container.innerHTML = repos.map(repo => `
+    <div class="repo-item">
+      <div class="repo-info">
+        <div class="repo-icon">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 19v-2c0-1.66 1.34-3 3-3h10c1.66 0 3 1.34 3 3v2M4 19c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2M4 19c0-1.1.9-2 2-2M4 5v6c0 1.66 1.34 3 3 3h10c1.66 0 3-1.34 3-3V5M4 5c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2" stroke="currentColor" stroke-width="1.5"/></svg>
+        </div>
+        <div>
+          <div class="repo-name">${repo.full_name}</div>
+          <div class="repo-meta">
+            <span>${repo.private ? '🔒 Private' : '🌎 Public'}</span>
+            <span>${repo.language || ''}</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-outline" style="padding:6px 14px;font-size:13px;" onclick="selectRepo('${repo.full_name}', '${repo.default_branch}', '${repo.language}')">Import</button>
+    </div>
+  `).join('');
+}
+
+function filterRepos() {
+  const term = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allRepos.filter(r => r.full_name.toLowerCase().includes(term));
+  renderRepos(filtered);
+}
+
+function selectRepo(fullName, branch, language) {
+  document.getElementById('config-panel').classList.add('active');
+  document.getElementById('repo-name-display').value = fullName;
+  document.getElementById('repo-fullname').value = fullName;
+  
+  const branchSelect = document.getElementById('branch-select');
+  if (!Array.from(branchSelect.options).find(o => o.value === branch)) {
+    branchSelect.add(new Option(branch, branch));
+  }
+  branchSelect.value = branch || 'main';
+  
+  const fwSelect = document.getElementById('framework-select');
+  if (language === 'TypeScript' || language === 'JavaScript') fwSelect.value = 'Next.js';
+  else if (language === 'Vue') fwSelect.value = 'Vue';
+  else if (language === 'Svelte') fwSelect.value = 'Svelte';
+  else fwSelect.value = 'Static HTML';
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function handleImport(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-deploy');
+  btn.textContent = 'Deploying...';
+  btn.style.opacity = '0.7';
+  btn.disabled = true;
+
+  const repoFullName = document.getElementById('repo-fullname').value;
+  const branch = document.getElementById('branch-select').value;
+  const framework = document.getElementById('framework-select').value;
+
+  try {
+    const res = await fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repoFullName, branch, framework })
+    });
+    const data = await res.json();
+    if (data.deployId) {
+      window.location.href = `/deploy/${data.deployId}`;
+    }
+  } catch (err) {
+    alert('Failed to start deployment');
+    btn.textContent = 'Deploy Now';
+    btn.style.opacity = '1';
+    btn.disabled = false;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
