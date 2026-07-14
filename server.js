@@ -92,7 +92,7 @@ async function sendWelcomeEmail(toEmail, name) {
             <p style="color:#9ca3af;font-size:16px;line-height:1.6;margin:0 0 28px;">
               Your account has been created successfully. You can now deploy websites instantly — upload a ZIP or connect your GitHub repo.
             </p>
-            <a href="${BASE_URL}/dashboard" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:#fff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:15px;">Go to Dashboard →</a>
+            <a href="https://deplysss.itkhent.workers.dev/dashboard" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:#fff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:15px;">Go to Dashboard →</a>
             <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:32px 0;">
             <p style="color:#6b7280;font-size:13px;margin:0;">You received this email because an account was created with this email address on Deployify.</p>
           </div>
