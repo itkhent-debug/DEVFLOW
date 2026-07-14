@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Deployify</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { background: #060608; }
+    .dash-layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px; background: #09090f; border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex; flex-direction: column; padding: 20px 0; position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px; padding: 12px 20px 24px;
+      text-decoration: none; color: white; font-size: 17px; font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px;
+    }
+    .sidebar-nav { flex: 1; padding: 0 10px; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 9px;
+      text-decoration: none; color: rgba(255,255,255,0.5); font-size: 13.5px; font-weight: 500;
+      margin-bottom: 2px; transition: all 0.2s;
+    }
+    .sidebar-link:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-link.active { color: white; background: rgba(139,92,246,0.15); }
+    .sidebar-bottom { padding: 16px 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+    
+    .user-widget { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 9px; cursor: pointer; transition: background 0.2s; text-decoration: none; }
+    .user-widget:hover { background: rgba(255,255,255,0.06); }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+      background: linear-gradient(135deg, #8b5cf6, #3b82f6); display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: white; flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-plan { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+    /* Main content */
+    .main-content { margin-left: 240px; flex: 1; min-height: 100vh; }
+    .dash-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 36px; border-bottom: 1px solid rgba(255,255,255,0.07);
+      background: rgba(6,6,8,0.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 50;
+    }
+    .dash-header h1 { font-size: 18px; font-weight: 700; }
+    .dash-content { padding: 36px; max-width: 800px; }
+
+    /* Form Styles */
+    .settings-card {
+      background: #111119; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+      padding: 28px; margin-bottom: 24px;
+    }
+    .settings-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: white; }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .form-control {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; padding: 11px 14px; color: white; font-family: inherit; font-size: 14px;
+      transition: all 0.2s;
+    }
+    .form-control:focus { outline: none; border-color: #8b5cf6; background: rgba(139,92,246,0.05); }
+    .form-control[readonly] { opacity: 0.6; cursor: not-allowed; }
+    
+    .alert-msg {
+      border-radius: 8px; padding: 12px 16px; font-size: 13.5px; margin-bottom: 20px; display: none;
+    }
+    .alert-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #4ade80; }
+    .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; }
+      .dash-content { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="dash-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="/" class="sidebar-logo">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none"><polygon points="14,2 26,24 2,24" fill="white"/></svg>
+      Deployify
+    </a>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="sidebar-link" id="sl-dashboard">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+        Dashboard
+      </a>
+      <a href="/import" class="sidebar-link" id="sl-import">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77A5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Import from GitHub
+      </a>
+      <a href="/upload" class="sidebar-link" id="sl-upload">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Upload Files
+      </a>
+      <a href="/settings" class="sidebar-link active" id="sl-settings">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Settings
+      </a>
+      <a href="/docs" class="sidebar-link" id="sl-docs">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5"/><polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="1.5"/></svg>
+        Documentation
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-widget" id="user-widget">
+        <div class="user-avatar" id="user-avatar-el">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name-el">Loading...</div>
+          <div class="user-plan">Hobby Plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <header class="dash-header">
+      <h1>Settings</h1>
+      <button onclick="handleLogout()" class="btn btn-ghost" id="btn-logout" style="font-size:13px;padding:8px 14px;">Log out</button>
+    </header>
+
+    <div class="dash-content">
+      <div class="alert-msg" id="alert-box"></div>
+
+      <!-- Profile Settings -->
+      <div class="settings-card">
+        <h3>Profile Settings</h3>
+        <form id="profile-form">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="settings-email" readonly />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="settings-name">Display Name</label>
+            <input type="text" class="form-control" id="settings-name" required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="padding:10px 20px;width:auto;">Save Changes</button>
+        </form>
+      </div>
+
+      <!-- Password Change (only for Email auth type) -->
+      <div class="settings-card" id="password-card" style="display:none;">
+        <h3>Change Password</h3>
+        <form id="password-form">
+          <div class="form-group">
+            <label class="form-label" for="current-pwd">Current Password</label>
+            <input type="password" class="form-control" id="current-pwd" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-pwd">New Password</label>
+            <input type="password" class="form-control" id="new-pwd" required minlength="6" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirm-pwd">Confirm New Password</label>
+            <input type="password" class="form-control" id="confirm-pwd" required minlength="6" />
+          </div>
+          <button type="submit" class="btn btn-primary" style="padding:10px 20px;width:auto;">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+
+async function init() {
+  const res = await fetch('/api/auth/me');
+  const data = await res.json();
+  if (!data.authenticated) return window.location.href = '/auth';
+  
+  currentUser = data.user;
+  document.getElementById('settings-email').value = currentUser.email || 'N/A';
+  document.getElementById('settings-name').value = currentUser.name || currentUser.login;
+  
+  // Set avatar & sidebar info
+  document.getElementById('user-name-el').textContent = currentUser.name || currentUser.login;
+  const avatarEl = document.getElementById('user-avatar-el');
+  if (currentUser.avatar) {
+    avatarEl.innerHTML = `<img src="${currentUser.avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" alt="avatar" />`;
+  } else {
+    avatarEl.textContent = (currentUser.login || 'U')[0].toUpperCase();
+  }
+
+  // Only show password block if signed up via Email
+  if (currentUser.authType === 'email') {
+    document.getElementById('password-card').style.display = 'block';
+  }
+}
+
+function showAlert(msg, isSuccess = true) {
+  const box = document.getElementById('alert-box');
+  box.textContent = msg;
+  box.className = `alert-msg ${isSuccess ? 'alert-success' : 'alert-error'}`;
+  box.style.display = 'block';
+  setTimeout(() => box.style.display = 'none', 4000);
+}
+
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('settings-name').value.trim();
+  
+  try {
+    const res = await fetch('/api/auth/update-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (!res.ok) return showAlert(data.error || 'Failed to update profile', false);
+    showAlert('Profile updated successfully!');
+    document.getElementById('user-name-el').textContent = name;
+  } catch (err) {
+    showAlert('Network error', false);
+  }
+});
+
+document.getElementById('password-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const currentPassword = document.getElementById('current-pwd').value;
+  const newPassword = document.getElementById('new-pwd').value;
+  const confirmPassword = document.getElementById('confirm-pwd').value;
+
+  if (newPassword !== confirmPassword) {
+    return showAlert('New passwords do not match', false);
+  }
+
+  try {
+    const res = await fetch('/api/auth/update-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const data = await res.json();
+    if (!res.ok) return showAlert(data.error || 'Failed to update password', false);
+    
+    showAlert('Password updated successfully!');
+    document.getElementById('password-form').reset();
+  } catch (err) {
+    showAlert('Network error', false);
+  }
+});
+
+async function handleLogout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/';
+}
+
+init();
+</script>
+</body>
+</html>

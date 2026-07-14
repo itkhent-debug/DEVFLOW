@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up / Log In — Deployify</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #8b5cf6; --blue: #3b82f6; --green: #22c55e;
+      --bg: #060608; --card: #111119; --border: rgba(255,255,255,0.08);
+      --text: #f9fafb; --muted: rgba(255,255,255,0.5); --dim: rgba(255,255,255,0.25);
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+
+    /* Background glow */
+    .glow-bg {
+      position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
+    }
+    .glow-circle {
+      position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12;
+    }
+    .glow-1 { width: 600px; height: 600px; background: var(--purple); top: -200px; left: -100px; }
+    .glow-2 { width: 500px; height: 500px; background: var(--blue); bottom: -150px; right: -100px; }
+
+    .auth-wrapper { position: relative; z-index: 1; width: 100%; max-width: 440px; }
+
+    /* Logo */
+    .brand { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 36px; text-decoration: none; color: var(--text); }
+    .brand-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--purple), var(--blue)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .brand-name { font-size: 20px; font-weight: 800; }
+
+    /* Card */
+    .auth-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 32px; box-shadow: 0 32px 64px rgba(0,0,0,0.6);
+    }
+
+    /* Tabs */
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+    .tab-btn {
+      padding: 10px; border: none; background: transparent; color: var(--muted); font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 9px; cursor: pointer; transition: all 0.2s;
+    }
+    .tab-btn.active { background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; }
+
+    /* Form panel */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .panel-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .panel-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 7px; }
+    .form-control {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 10px; padding: 13px 14px; color: var(--text); font-family: inherit; font-size: 14px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .form-control:focus { outline: none; border-color: var(--purple); background: rgba(139,92,246,0.06); }
+    .form-control::placeholder { color: var(--dim); }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px; width: 100%; border: none; border-radius: 11px;
+      font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(139,92,246,0.4); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-github {
+      background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--text);
+      margin-top: 12px;
+    }
+    .btn-github:hover { background: rgba(255,255,255,0.11); }
+
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--dim); font-size: 12px; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .error-msg {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171;
+      border-radius: 9px; padding: 11px 14px; font-size: 13px; margin-bottom: 16px; display: none;
+    }
+    .error-msg.active { display: block; }
+
+    .success-msg {
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #4ade80;
+      border-radius: 9px; padding: 11px 14px; font-size: 13px; margin-bottom: 16px; display: none;
+    }
+    .success-msg.active { display: block; }
+
+    .terms { font-size: 12px; color: var(--dim); text-align: center; margin-top: 16px; line-height: 1.6; }
+    .terms a { color: var(--purple); text-decoration: none; }
+
+    /* Password strength */
+    .pwd-strength { margin-top: 6px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+    .pwd-bar { height: 100%; transition: all 0.3s; border-radius: 2px; width: 0%; }
+
+    /* Spinner */
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="glow-bg"><div class="glow-circle glow-1"></div><div class="glow-circle glow-2"></div></div>
+
+  <div class="auth-wrapper">
+    <a href="/" class="brand">
+      <div class="brand-icon">▲</div>
+      <span class="brand-name">Deployify</span>
+    </a>
+
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+        <button class="tab-btn" id="tab-login" onclick="switchTab('login')">Log In</button>
+      </div>
+
+      <!-- SIGN UP PANEL -->
+      <div class="panel active" id="panel-signup">
+        <div class="panel-title">Start for free 🚀</div>
+        <div class="panel-sub">Create your account with your Gmail address</div>
+
+        <div class="error-msg" id="signup-error"></div>
+        <div class="success-msg" id="signup-success"></div>
+
+        <form id="signup-form">
+          <div class="form-group">
+            <label class="form-label" for="signup-name">Full Name</label>
+            <input class="form-control" type="text" id="signup-name" placeholder="e.g. John Smith" required autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-email">Gmail Address</label>
+            <input class="form-control" type="email" id="signup-email" placeholder="you@gmail.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-password">Password</label>
+            <input class="form-control" type="password" id="signup-password" placeholder="Minimum 6 characters" required autocomplete="new-password" oninput="updatePwdStrength(this.value)" />
+            <div class="pwd-strength"><div class="pwd-bar" id="pwd-bar"></div></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-confirm">Confirm Password</label>
+            <input class="form-control" type="password" id="signup-confirm" placeholder="Repeat password" required autocomplete="new-password" />
+          </div>
+          <button class="btn btn-primary" type="submit" id="signup-btn">
+            Create Account
+          </button>
+        </form>
+
+        <div class="divider">or continue with</div>
+
+        <button class="btn btn-github" onclick="window.location='/api/auth/github'">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </button>
+
+        <p class="terms">By signing up you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a></p>
+      </div>
+
+      <!-- LOG IN PANEL -->
+      <div class="panel" id="panel-login">
+        <div class="panel-title">Welcome back 👋</div>
+        <div class="panel-sub">Log in to your Deployify account</div>
+
+        <div class="error-msg" id="login-error"></div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email Address</label>
+            <input class="form-control" type="email" id="login-email" placeholder="you@gmail.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input class="form-control" type="password" id="login-password" placeholder="Your password" required autocomplete="current-password" />
+          </div>
+          <button class="btn btn-primary" type="submit" id="login-btn">Log In</button>
+        </form>
+
+        <div class="divider">or</div>
+
+        <button class="btn btn-github" onclick="window.location='/api/auth/github'">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          Continue with GitHub
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+function switchTab(tab) {
+  document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+}
+
+function updatePwdStrength(val) {
+  const bar = document.getElementById('pwd-bar');
+  let score = 0;
+  if (val.length >= 6) score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e','#22c55e'];
+  bar.style.width = (score * 20) + '%';
+  bar.style.background = colors[score - 1] || 'transparent';
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('active');
+}
+function hideError(id) { document.getElementById(id).classList.remove('active'); }
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<div class="spinner"></div> Please wait...'
+    : btn.id === 'signup-btn' ? 'Create Account' : 'Log In';
+}
+
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideError('signup-error');
+
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const confirm = document.getElementById('signup-confirm').value;
+
+  if (password !== confirm) return showError('signup-error', 'Passwords do not match');
+  if (!email.includes('@gmail.com') && !email.includes('@')) return showError('signup-error', 'Please enter a valid email address');
+
+  setLoading('signup-btn', true);
+  try {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) return showError('signup-error', data.error || 'Sign up failed');
+
+    const successEl = document.getElementById('signup-success');
+    successEl.textContent = `✅ Account created! Welcome ${name}. A confirmation email has been sent to ${email}.`;
+    successEl.classList.add('active');
+    setTimeout(() => window.location.href = '/dashboard', 1500);
+  } catch (err) {
+    showError('signup-error', 'Network error — please try again');
+  } finally {
+    setLoading('signup-btn', false);
+  }
+});
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideError('login-error');
+
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  setLoading('login-btn', true);
+  try {
+    const res = await fetch('/api/auth/login/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) return showError('login-error', data.error || 'Login failed');
+    window.location.href = '/dashboard';
+  } catch (err) {
+    showError('login-error', 'Network error — please try again');
+  } finally {
+    setLoading('login-btn', false);
+  }
+});
+
+// Check if already logged in
+fetch('/api/auth/me').then(r => r.json()).then(d => {
+  if (d.authenticated) window.location.href = '/dashboard';
+});
+</script>
+</body>
+</html>

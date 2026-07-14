@@ -21,6 +21,8 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const AdmZip = require('adm-zip');
+const nodemailer = require('nodemailer');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +53,57 @@ const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || '';
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'deployify-secret-key-change-in-prod';
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const GMAIL_USER = process.env.GMAIL_USER || '';
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || '';
+
+// ===== EMAIL MAILER =====
+let mailer = null;
+if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+  mailer = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD }
+  });
+  mailer.verify(err => {
+    if (err) console.warn('⚠️  Gmail SMTP not connected:', err.message);
+    else console.log('✅ Gmail SMTP ready — emails will be sent from', GMAIL_USER);
+  });
+} else {
+  console.log('ℹ️  Email disabled — add GMAIL_USER and GMAIL_APP_PASSWORD to .env to enable');
+}
+
+async function sendWelcomeEmail(toEmail, name) {
+  if (!mailer) {
+    console.log(`[EMAIL SKIPPED] Would send welcome email to ${toEmail}`);
+    return;
+  }
+  try {
+    await mailer.sendMail({
+      from: `"Deployify" <${GMAIL_USER}>`,
+      to: toEmail,
+      subject: '🚀 Welcome to Deployify!',
+      html: `
+        <div style="background:#060608;padding:40px;font-family:Inter,sans-serif;color:#fff;">
+          <div style="max-width:540px;margin:0 auto;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">▲</div>
+              <span style="font-size:22px;font-weight:800;">Deployify</span>
+            </div>
+            <h1 style="font-size:28px;font-weight:800;margin:0 0 12px;">Welcome, ${name}! 🎉</h1>
+            <p style="color:#9ca3af;font-size:16px;line-height:1.6;margin:0 0 28px;">
+              Your account has been created successfully. You can now deploy websites instantly — upload a ZIP or connect your GitHub repo.
+            </p>
+            <a href="${BASE_URL}/dashboard" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:#fff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:15px;">Go to Dashboard →</a>
+            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:32px 0;">
+            <p style="color:#6b7280;font-size:13px;margin:0;">You received this email because an account was created with this email address on Deployify.</p>
+          </div>
+        </div>
+      `
+    });
+    console.log(`✅ Welcome email sent to ${toEmail}`);
+  } catch (err) {
+    console.error('❌ Failed to send welcome email:', err.message);
+  }
+}
 
 // ===== MIDDLEWARE =====
 app.use(cors({ origin: true, credentials: true }));
@@ -71,7 +124,10 @@ const UserSchema = new mongoose.Schema({
   name: String,
   avatar: String,
   token: String,
-  email: String
+  email: { type: String, default: '' },
+  passwordHash: { type: String, default: '' },  // for email/password accounts
+  authType: { type: String, default: 'github' }, // 'github' | 'email'
+  createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -382,10 +438,13 @@ async function processZipDeploy(deployId, zipPath, projectName) {
 
 // ===== SERVE PAGES =====
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/auth', (req, res) => res.sendFile(path.join(__dirname, 'public', 'auth.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
 app.get('/deploy/:id', (req, res) => res.sendFile(path.join(__dirname, 'public', 'deploy.html')));
 app.get('/import', (req, res) => res.sendFile(path.join(__dirname, 'public', 'import.html')));
 app.get('/upload', (req, res) => res.sendFile(path.join(__dirname, 'public', 'upload.html')));
+app.get('/settings', (req, res) => res.sendFile(path.join(__dirname, 'public', 'settings.html')));
+app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
 
 // ===== AUTH STATUS =====
 app.get('/api/auth/me', async (req, res) => {
@@ -395,10 +454,106 @@ app.get('/api/auth/me', async (req, res) => {
     if (!user) return res.json({ authenticated: false });
     res.json({
       authenticated: true,
-      user: { id: user.id, login: user.login, name: user.name, avatar: user.avatar, email: user.email }
+      user: { id: user.id, login: user.login, name: user.name, avatar: user.avatar, email: user.email, authType: user.authType || 'github' }
     });
   } catch (err) {
     res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// ===== EMAIL SIGN UP =====
+app.post('/api/auth/signup', async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: 'name, email and password are required' });
+  if (!email.includes('@')) return res.status(400).json({ error: 'Invalid email address' });
+  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+  try {
+    // Check if email already registered
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) return res.status(409).json({ error: 'An account with this email already exists' });
+
+    const userId = uuidv4();
+    const login = email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '_');
+    const passwordHash = await bcrypt.hash(password, 12);
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+
+    const user = new User({
+      id: userId,
+      login,
+      name,
+      email: email.toLowerCase(),
+      passwordHash,
+      authType: 'email',
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=8b5cf6&color=fff&bold=true`,
+      token: ''
+    });
+    await user.save();
+
+    req.session.userId = userId;
+
+    // Send welcome email (async, don't block response)
+    sendWelcomeEmail(email.toLowerCase(), name).catch(() => {});
+
+    res.json({
+      ok: true,
+      user: { id: userId, login, name, email: email.toLowerCase(), avatar: user.avatar }
+    });
+  } catch (err) {
+    console.error('Signup error:', err);
+    res.status(500).json({ error: 'Failed to create account' });
+  }
+});
+
+// ===== EMAIL LOGIN =====
+app.post('/api/auth/login/email', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'email and password are required' });
+
+  try {
+    const user = await User.findOne({ email: email.toLowerCase(), authType: 'email' });
+    if (!user) return res.status(401).json({ error: 'No account found with this email' });
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) return res.status(401).json({ error: 'Incorrect password' });
+
+    req.session.userId = user.id;
+    res.json({
+      ok: true,
+      user: { id: user.id, login: user.login, name: user.name, email: user.email, avatar: user.avatar }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// ===== UPDATE PROFILE =====
+app.post('/api/auth/update-profile', requireAuth, async (req, res) => {
+  const { name, currentPassword, newPassword } = req.body;
+  try {
+    const user = await User.findOne({ id: req.session.userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const updates = {};
+    if (name && name.trim()) {
+      updates.name = name.trim();
+    }
+
+    if (newPassword) {
+      if (user.authType !== 'email') return res.status(400).json({ error: 'Cannot change password for GitHub accounts' });
+      if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
+      if (newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+      updates.passwordHash = await bcrypt.hash(newPassword, 12);
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await User.updateOne({ id: req.session.userId }, updates);
+    }
+    res.json({ ok: true, message: 'Profile updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Update failed' });
   }
 });
 
