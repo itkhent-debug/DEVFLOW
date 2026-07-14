@@ -662,7 +662,7 @@ app.get('/api/github/repos', requireAuth, async (req, res) => {
     const user = await User.findOne({ id: req.session.userId });
     if (!user) return res.status(401).json({ error: 'User not found' });
 
-    if (user.token === 'demo-token') {
+    if (user.token === 'demo-token' || !user.token) {
       // Return demo repos
       return res.json([
         { id: 1, name: 'DEVFLOW', full_name: 'itkhent-debug/DEVFLOW', description: 'Deployify clone website', private: false, default_branch: 'main', language: 'HTML', updated_at: new Date().toISOString(), stargazers_count: 3 },
