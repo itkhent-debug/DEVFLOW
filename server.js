@@ -471,7 +471,12 @@ app.post('/api/auth/signup', async (req, res) => {
   try {
     // Check if email already registered
     const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) return res.status(409).json({ error: 'An account with this email already exists' });
+    if (existing) {
+      if (existing.authType === 'github') {
+        return res.status(409).json({ error: 'This email is already registered via GitHub. Please log in using the GitHub button.' });
+      }
+      return res.status(409).json({ error: 'An account with this email already exists' });
+    }
 
     const userId = uuidv4();
     const login = email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -511,8 +516,12 @@ app.post('/api/auth/login/email', async (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'email and password are required' });
 
   try {
-    const user = await User.findOne({ email: email.toLowerCase(), authType: 'email' });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(401).json({ error: 'No account found with this email' });
+
+    if (user.authType === 'github' && !user.passwordHash) {
+      return res.status(401).json({ error: 'This email is linked with GitHub. Please log in using the GitHub button.' });
+    }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return res.status(401).json({ error: 'Incorrect password' });
