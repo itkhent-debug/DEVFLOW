@@ -1,0 +1,7 @@
+node_modules/
+.env
+uploads/
+.git/
+server.js
+package-lock.json
+package.json
